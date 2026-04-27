@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>語彙の王様 - 2人専用完全版</title>
+<style>
+body{
+font-family:-apple-system,BlinkMacSystemFont;
+background:linear-gradient(135deg,#1e1e2f,#2c2c54);
+color:white;
+text-align:center;
+margin:0;
+padding:20px;
+}
+.card{
+background:#ffffff10;
+backdrop-filter:blur(10px);
+border-radius:20px;
+padding:20px;
+margin:20px auto;
+width:90%;
+max-width:400px;
+font-size:22px;
+animation:fadeIn .4s ease;
+}
+button{
+padding:12px 20px;
+margin:8px;
+border:none;
+border-radius:12px;
+font-size:16px;
+background:#ffd700;
+color:black;
+font-weight:bold;
+}
+input{
+padding:10px;
+border-radius:10px;
+border:none;
+width:80%;
+margin:10px 0;
+}
+@keyframes fadeIn{
+from{opacity:0;transform:scale(.95);}
+to{opacity:1;transform:scale(1);}
+}
+.score{
+font-size:18px;
+margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<h1>語彙の王様 👑</h1>
+
+<div>
+<select id="mode">
+<option value="easy">簡単モード</option>
+<option value="full">完全版</option>
+</select>
+
+<select id="timerSelect">
+<option value="0">無制限</option>
+<option value="60">1分</option>
+<option value="120">2分</option>
+<option value="180">3分</option>
+<option value="240">4分</option>
+<option value="300">5分</option>
+</select>
+
+<button onclick="startGame()">開始</button>
+</div>
+
+<div id="timer"></div>
+
+<div class="card" id="cardArea">スタートを押してね</div>
+
+<input type="text" id="answer" placeholder="ここに回答を書く">
+
+<br>
+<button onclick="submitAnswer()">決定</button>
+<button onclick="nextTurn()">次のカード</button>
+
+<div class="score">
+<div>ゆりか: <span id="p1">0</span></div>
+<div>たく: <span id="p2">0</span></div>
+</div>
+
+<div id="result"></div>
+
+<audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3"></audio>
+<audio id="failSound" src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"></audio>
+
+<script>
+const cardsEasy=[
+"赤いもの","甘いもの","動物","食べ物","乗り物",
+"丸いもの","速いもの","学校にあるもの","家にあるもの","海の生き物"
+];
+
+const cardsFull=[
+"尊敬できる人","努力とは","幸せとは","大人とは","子供とは",
+"理想の休日","強さとは","愛とは","夢とは","自由とは",
+"時間とは","友情とは","信頼とは","勇気とは","未来とは",
+"成功とは","挑戦とは","後悔とは","成長とは","感謝とは",
+"仕事とは","家族とは","幸運とは","平和とは","リーダーとは",
+"優しさとは","責任とは","自立とは","健康とは","才能とは",
+"誠実とは","情熱とは","幸福な人生とは","安心とは","約束とは",
+"直感とは","努力家とは","誇りとは","希望とは","挑戦者とは",
+"失敗とは","学びとは","覚悟とは","決断とは","忍耐とは",
+"冷静とは","論理とは","直感力とは","協力とは","覚醒とは",
+"誠意とは","信念とは","尊重とは","自由人とは","探究心とは",
+"柔軟性とは","行動力とは","本質とは","継続とは","達成とは",
+"本音とは","魅力とは","余裕とは","謙虚とは","主体性とは",
+"独創性とは","責任感とは","思いやりとは","客観性とは","創造力とは",
+"冷静さとは","幸福感とは","自己肯定とは","行動哲学とは","成功哲学とは",
+"愛情とは","忍耐力とは","覚悟とは","集中力とは","精神力とは",
+"品格とは","存在感とは","人間力とは","表現力とは","言語力とは",
+"説得力とは","挑戦心とは","責任能力とは","公平とは","誇り高い人とは",
+"本物とは","誠実な人とは","信頼できる人とは","魅力的な人とは","豊かさとは"
+];
+
+let currentPlayer=1;
+let score1=0;
+let score2=0;
+let usedAnswers=[];
+let currentCard="";
+let timerInterval;
+let timeLeft=0;
+
+function startGame(){
+score1=0;score2=0;
+document.getElementById("p1").textContent=0;
+document.getElementById("p2").textContent=0;
+usedAnswers=[];
+nextTurn();
+startTimer();
+}
+
+function startTimer(){
+clearInterval(timerInterval);
+timeLeft=parseInt(document.getElementById("timerSelect").value);
+if(timeLeft===0){
+document.getElementById("timer").textContent="無制限";
+return;
+}
+document.getElementById("timer").textContent="残り "+timeLeft+"秒";
+timerInterval=setInterval(()=>{
+timeLeft--;
+document.getElementById("timer").textContent="残り "+timeLeft+"秒";
+if(timeLeft<=0){
+clearInterval(timerInterval);
+alert("時間終了！");
+}
+},1000);
+}
+
+function nextTurn(){
+const mode=document.getElementById("mode").value;
+const list=mode==="easy"?cardsEasy:cardsFull;
+currentCard=list[Math.floor(Math.random()*list.length)];
+document.getElementById("cardArea").textContent=currentCard+"（"+(currentPlayer===1?"ゆりか":"たく")+"）";
+document.getElementById("answer").value="";
+}
+
+function submitAnswer(){
+const ans=document.getElementById("answer").value.trim();
+if(!ans)return;
+
+let score=aiJudge(ans);
+if(score>0){
+if(currentPlayer===1){score1+=score;}
+else{score2+=score;}
+document.getElementById("correctSound").play();
+}else{
+document.getElementById("failSound").play();
+}
+
+document.getElementById("p1").textContent=score1;
+document.getElementById("p2").textContent=score2;
+
+usedAnswers.push(ans);
+currentPlayer=currentPlayer===1?2:1;
+}
+
+function aiJudge(text){
+if(usedAnswers.includes(text)) return 0;
+let point=0;
+if(text.length>=5) point+=1;
+if(text.length>=10) point+=1;
+if(/[。！!？?]/.test(text)) point+=1;
+if(text.split(" ").length>=2) point+=1;
+return point;
+}
+</script>
+
+</body>
+</html>
